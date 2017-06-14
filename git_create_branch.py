@@ -1,13 +1,6 @@
 # ==============================================================================
 # This script creates git branch and updates pom version
-'''
-1. tag eg. b_1704.x
-2. create branch eg. 1704.x
-3. mvn clean, update pom version eg. 1704-obs,
-4. update infra/commons properties
-5. commit
-6. push
-'''
+#
 # author: Quadir Sha Kareemullah
 # ==============================================================================
 
@@ -71,7 +64,7 @@ def parse_args():
                         help='enable logging to file')
     parser.add_argument('-j', '--jira',
                         dest='jira_issue', metavar='<issue_id>',
-                        help='jira issue id')                        
+                        help='jira issue id')
     parser.add_argument('-s', '--src-branch',
                         dest='src_branch_name', metavar='<src_branch>',
                         help='source branch')
@@ -199,9 +192,9 @@ def get_mvn_paths(repo_path):
 # ------------------------------------------------------------------------------
 def mvn_build(mvn_paths, offline):
     if offline:
-        mvn_cmd_args = ['mvn', '-o', 'clean', 'install', '-DskipTests' ]
+        mvn_cmd_args = ['mvn', '-o', 'clean', 'install', '-DskipTests']
     else:
-        mvn_cmd_args = ['mvn', 'clean', 'install', '-DskipTests' ]
+        mvn_cmd_args = ['mvn', 'clean', 'install', '-DskipTests']
     for mvn_dir in mvn_paths:
         os.chdir(mvn_dir)
         exec_cmd(mvn_cmd_args)
@@ -246,7 +239,7 @@ def create_branch(branch_name):
 # commit & push changes
 # ------------------------------------------------------------------------------
 def commit(file_paths, commit_msg, new_branch):
-    add_cmd = ['git', 'add' ]
+    add_cmd = ['git', 'add']
     add_cmd.extend(file_paths)
     exec_cmd(add_cmd)
     exec_cmd(['git', 'commit', '-m', commit_msg])
@@ -257,7 +250,7 @@ def commit(file_paths, commit_msg, new_branch):
 # searches file for a pattern and returns the matched group
 # ------------------------------------------------------------------------------
 def rgx_search(file_path, rgx, grp=0):
-    with open(file_path, "rt", encoding="utf-8") as file:
+    with open(file_path, 'rt', encoding='utf-8') as file:
         file_text = file.read()
     match = rgx.search(file_text)
     return match.group(grp)
@@ -266,9 +259,9 @@ def rgx_search(file_path, rgx, grp=0):
 # searches & replaces all occurrences of a pattern in file
 # ------------------------------------------------------------------------------
 def rgx_rpl_file_txt(file_path, rgx, rpl_str):
-    with open(file_path, "rt", encoding="utf-8") as file:
+    with open(file_path, 'rt', encoding='utf-8') as file:
         file_text = file.read()
-    with open(file_path, "wt", encoding="utf-8") as file:
+    with open(file_path, 'wt', encoding='utf-8') as file:
         file.write(rgx.sub(rpl_str, file_text))
 
 
@@ -276,9 +269,9 @@ def rgx_rpl_file_txt(file_path, rgx, rpl_str):
 # searches & replaces all occurrences of a string in file
 # ------------------------------------------------------------------------------
 def rpl_file_txt(file_path, srch_str, rpl_str):
-    with open(file_path, "rt", encoding="utf-8") as file:
+    with open(file_path, 'rt', encoding='utf-8') as file:
         file_text = file.read()
-    with open(file_path, "wt", encoding="utf-8") as file:
+    with open(file_path, 'wt', encoding='utf-8') as file:
         file.write(file_text.replace(srch_str, rpl_str))
 
 
@@ -286,7 +279,7 @@ def rpl_file_txt(file_path, srch_str, rpl_str):
 # gets list of paths for all pom files in the search path
 # ------------------------------------------------------------------------------
 def get_pom_paths(search_path):
-    find_pom_cmd_args = [ 'find', search_path, '-name', 'pom.xml' ]
+    find_pom_cmd_args = ['find', search_path, '-name', 'pom.xml']
     return subprocess.check_output(find_pom_cmd_args, shell=True, universal_newlines=True).strip().split('\n')
 
 # ------------------------------------------------------------------------------
@@ -296,7 +289,7 @@ def update_pom_ver(mvn_paths, pom_ver):
     file_paths = []
     for mvn_dir in mvn_paths:
         os.chdir(mvn_dir)
-        exec_cmd(['mvn', '-o', 'clean' ])        
+        exec_cmd(['mvn', '-o', 'clean'])
         pom_paths = get_pom_paths(mvn_dir)
         logging.debug(pom_paths)
         for f in pom_paths:
@@ -346,13 +339,13 @@ def main():
 
         create_branch(branch_name)
 
-        file_paths = update_pom_ver(mvn_paths, cmd_args.pom_ver)    
+        file_paths = update_pom_ver(mvn_paths, cmd_args.pom_ver)
 
         commit(file_paths, jira_issue + 'created branch and updated pom version to ' + cmd_args.pom_ver, branch_name)
 
         create_tag('b_' + tag_id + '_post',
            jira_issue + 'pom version update checkpoint' )
-           
+
         if cmd_args.mvn_build:
             mvn_build(mvn_paths, False)
         elif cmd_args.mvn_build_offline:
